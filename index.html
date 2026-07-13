@@ -2,335 +2,84 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phần Mềm Tạo Hóa Đơn A4 Ngang</title>
-    <link href="https://fonts.googleapis.com/css2?family=Libre+Barcode+39&display=swap" rel="stylesheet">
+    <title>Phần Mềm Hóa Đơn K80</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root {
-            --primary: #007bff;
-            --bg: #f4f6f9;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
-        body { background: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 20px; }
-
-        /* Giao diện 2 cột: Form & Preview */
-        .container { display: flex; width: 100%; max-width: 1400px; gap: 20px; align-items: flex-start; }
+        /* GIAO DIỆN CHÍNH */
+        body { font-family: Arial, sans-serif; background: #f4f6f9; display: flex; padding: 20px; gap: 20px; }
+        .form-section { width: 400px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .preview-section { flex: 1; display: flex; justify-content: center; background: #666; padding: 20px; }
         
-        /* CỘT TRÁI: BẢNG NHẬP LIỆU */
-        .form-section {
-            background: #fff; width: 400px; padding: 20px; border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1); height: 90vh; overflow-y: auto;
-        }
-        .form-section h2 { font-size: 18px; margin-bottom: 15px; text-align: center; color: #333; }
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #555;}
-        .form-group input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
-        
-        /* Khu vực sản phẩm trong form */
-        .product-inputs { border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 4px; background: #fafafa; }
-        .product-inputs h4 { font-size: 14px; margin-bottom: 10px; display: flex; justify-content: space-between; }
-        .btn-remove { color: red; cursor: pointer; font-size: 12px; font-weight: normal; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        
-        .btn { width: 100%; padding: 10px; font-weight: bold; cursor: pointer; border: none; border-radius: 4px; margin-top: 10px; }
-        .btn-add { background: #28a745; color: #fff; }
-        .btn-pdf { background: #dc3545; color: #fff; font-size: 16px; margin-top: 20px; }
-        .btn:hover { opacity: 0.9; }
-
-        /* CỘT PHẢI: XEM TRƯỚC HÓA ĐƠN */
-        .preview-section {
-            flex: 1; overflow-x: auto; background: #666; padding: 20px; border-radius: 8px;
-            display: flex; justify-content: center;
-        }
-        
-        /* KHUNG HÓA ĐƠN CHUẨN A4 NGANG (297mm x 210mm) */
-        .bill-template {
-            background: #fff;
-            width: 297mm; 
-            min-height: 210mm; 
-            padding: 20mm; /* Lề giấy */
-            color: #000;
-            line-height: 1.5;
-            box-shadow: 0 0 15px rgba(0,0,0,0.5);
-            font-size: 14px;
-        }
-
-        /* Định dạng Header Hóa Đơn */
-        .bill-header { border-bottom: 1px solid #e0e0e0; padding-bottom: 15px; margin-bottom: 20px; }
-        .store-name { font-size: 20px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
-        
-        .bill-title-area { text-align: center; margin-bottom: 20px; }
-        .bill-title { font-size: 24px; font-weight: bold; margin-bottom: 5px; }
-        .barcode { font-family: 'Libre Barcode 39', cursive; font-size: 50px; line-height: 1; }
-
-        .meta-info { display: grid; grid-template-columns: 150px 1fr; gap: 5px; margin-bottom: 20px; }
-
-        /* Bảng Hóa Đơn */
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th, td { border: 1px solid #000; padding: 8px; text-align: left; }
-        th { text-align: center; font-weight: bold; }
+        /* ĐỊNH DẠNG HÓA ĐƠN K80 */
+        .bill-template { width: 80mm; background: #fff; padding: 10px; font-size: 12px; line-height: 1.4; color: #000; }
         .text-center { text-align: center; }
+        .bill-header { text-align: center; border-bottom: 1px dashed #000; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        th { border-bottom: 1px dashed #000; padding: 5px 0; }
+        td { padding: 5px 0; }
         .text-right { text-align: right; }
         
-        .col-stt { width: 5%; text-align: center;}
-        .col-ten { width: 50%; }
-        .col-dvt { width: 10%; text-align: center;}
-        .col-sl { width: 5%; text-align: center;}
-        .col-dg { width: 15%; text-align: right;}
-        .col-tt { width: 15%; text-align: right;}
-
-        /* Tổng kết */
-        .summary { width: 350px; margin-left: auto; }
-        .summary-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .summary-row.bold { font-weight: bold; font-size: 16px; }
-
-        /* Footer */
-        .footer { text-align: center; margin-top: 30px; font-size: 13px; }
-        .dashed-line { border-top: 1px dashed #000; margin: 15px 0; }
-        .italic { font-style: italic; }
-        .bold { font-weight: bold; }
-
+        /* ẨN KHI IN */
+        @media print {
+            #no-print, .btn { display: none !important; }
+            body { background: none; }
+            .preview-section { background: none; padding: 0; }
+            .bill-template { width: 80mm; box-shadow: none; }
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="form-section" id="no-print">
-        <h2>NHẬP THÔNG TIN HÓA ĐƠN</h2>
-        
-        <div class="form-group">
-            <label>Tên cửa hàng</label>
-            <input type="text" id="i-store" value="CỬA HÀNG GAS MINH TỰ TB" oninput="updateBill()">
-        </div>
-        <div class="form-group">
-            <label>Địa chỉ</label>
-            <input type="text" id="i-address" value="4/5 Bàu Bàng, Tân Bình, TP Hồ Chí Minh" oninput="updateBill()">
-        </div>
-        <div class="form-group">
-            <label>Số điện thoại</label>
-            <input type="text" id="i-phone" value="0901263661" oninput="updateBill()">
-        </div>
-        <hr style="margin: 15px 0; border: 0.5px solid #ddd;">
-        <div class="form-group">
-            <label>Ngày bán (Dạng Text)</label>
-            <input type="text" id="i-date" value="05/09/2018 23:02" oninput="updateBill()">
-        </div>
-        <div class="form-group">
-            <label>Nhân viên bán hàng</label>
-            <input type="text" id="i-staff" value="Nguyễn Thị Tịnh Tâm" oninput="updateBill()">
-        </div>
-        <div class="form-group">
-            <label>Khách hàng</label>
-            <input type="text" id="i-customer" value="Trần Thanh Thảo" oninput="updateBill()">
-        </div>
-        
-        <hr style="margin: 15px 0; border: 0.5px solid #ddd;">
-        <h3>Danh sách sản phẩm</h3>
-        <div id="product-list">
-            </div>
-        <button class="btn btn-add" onclick="addProduct()">+ Thêm Sản Phẩm</button>
+<div class="form-section" id="no-print">
+    <h2>NHẬP HÓA ĐƠN</h2>
+    <input type="text" id="i-store" placeholder="Tên cửa hàng" value="GAS MINH TỰ" oninput="updateBill()">
+    <div id="product-list"></div>
+    <button class="btn" onclick="addProduct()">+ Thêm SP</button>
+    <hr>
+    <button class="btn" onclick="window.print()" style="background: #28a745; color: #fff; border:none; padding:10px; width:100%; cursor:pointer;">🖨 IN HÓA ĐƠN K80</button>
+    <button class="btn" onclick="exportPDF()" style="background: #dc3545; color: #fff; border:none; padding:10px; width:100%; margin-top:5px; cursor:pointer;">💾 LƯU PDF</button>
+</div>
 
-        <hr style="margin: 15px 0; border: 0.5px solid #ddd;">
-        <div class="form-group">
-            <label>Khách trả: CÀ THẺ (VNĐ)</label>
-            <input type="number" id="i-cash" value="650000" oninput="updateBill()">
+<div class="preview-section">
+    <div class="bill-template" id="bill-template">
+        <div class="bill-header">
+            <h3 id="b-store">GAS MINH TỰ</h3>
+            <p>ĐC: Tân Bình, TP.HCM</p>
         </div>
-        <div class="form-group">
-            <label>Khách trả: Chuyển khoản (VNĐ)</label>
-            <input type="number" id="i-transfer" value="6000000" oninput="updateBill()">
-        </div>
-
-        <button class="btn btn-pdf" onclick="exportPDF()">💾 LƯU THÀNH PDF (A4 Ngang)</button>
-    </div>
-
-    <div class="preview-section">
-        <div class="bill-template" id="bill-template">
-            <div class="bill-header">
-                <div class="store-name" id="b-store">CỬA HÀNG GAS MINH TỰ TB</div>
-                <div>Địa chỉ: <span id="b-address">4/5 Bàu Bàng, Tân Bình, TP Hồ Chí Minh</span></div>
-                <div>Số điện thoại: <span id="b-phone">0901263661</span></div>
-            </div>
-
-            <div class="bill-title-area">
-                <div class="bill-title">HÓA ĐƠN BÁN LẺ</div>
-                <div class="barcode">*0901263661*</div>
-            </div>
-
-            <div class="meta-info">
-                <div>Ngày bán</div><div>: <span id="b-date">05/09/2018 23:02</span></div>
-                <div>Nhân viên bán hàng</div><div>: <span id="b-staff">Nguyễn Thị Tịnh Tâm</span></div>
-                <div>Khách hàng</div><div>: <span id="b-customer">Trần Thanh Thảo</span></div>
-            </div>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th class="col-stt">STT</th>
-                        <th class="col-ten">TÊN SẢN PHẨM</th>
-                        <th class="col-dvt">ĐVT</th>
-                        <th class="col-sl">SL</th>
-                        <th class="col-dg">ĐƠN GIÁ</th>
-                        <th class="col-tt">THÀNH TIỀN</th>
-                    </tr>
-                </thead>
-                <tbody id="b-product-table">
-                    </tbody>
-            </table>
-
-            <div class="summary">
-                <div class="summary-row">
-                    <span>Tổng số lượng:</span>
-                    <span id="b-total-qty">4</span>
-                </div>
-                <div class="summary-row bold">
-                    <span>Khách phải trả:</span>
-                    <span id="b-total-amount">6,650,000đ</span>
-                </div>
-                <div class="summary-row">
-                    <span>Cà thẻ:</span>
-                    <span id="b-cash">650,000đ</span>
-                </div>
-                <div class="summary-row">
-                    <span>Chuyển khoản:</span>
-                    <span id="b-transfer">6,000,000đ</span>
-                </div>
-            </div>
-
-            <div class="footer">
-                <div class="dashed-line"></div>
-                <div class="italic">Quý khách vui lòng kiểm tra hóa đơn và hàng hóa trước khi ra khỏi cửa hàng</div>
-                <div class="dashed-line"></div>
-                <div class="bold">CẢM ƠN QUÝ KHÁCH & HẸN GẶP LẠI</div>
-            </div>
-        </div>
+        <table>
+            <thead><tr><th>Tên SP</th><th>SL</th><th>ĐG</th><th>TT</th></tr></thead>
+            <tbody id="b-product-table"></tbody>
+        </table>
+        <div class="text-right" id="b-total">Tổng: 0đ</div>
     </div>
 </div>
 
 <script>
-    // Dữ liệu sản phẩm khởi tạo (đúng như hình mẫu)
-    let products = [
-        { name: 'Sữa tẩy trang OHUI Clear Science Tender cleansing Emulsion 150ml - M/Trắng/Dài', unit: 'Chai', qty: 3, price: 3450000 },
-        { name: 'Gel Rửa Tay Khô Bạc Hà MILAGANICS - M/Trắng/Dài', unit: 'Lọ', qty: 1, price: 100000 }
-    ];
+    let products = [{ name: 'Gas Petrolimex', qty: 1, price: 450000 }];
 
-    // Hàm format tiền tệ
-    function formatMoney(num) {
-        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + 'đ';
+    function updateBill() {
+        document.getElementById('b-store').innerText = document.getElementById('i-store').value;
+        const tbody = document.getElementById('b-product-table');
+        tbody.innerHTML = '';
+        let total = 0;
+        products.forEach((p, i) => {
+            let tt = p.qty * p.price;
+            total += tt;
+            tbody.innerHTML += `<tr><td>${p.name}</td><td>${p.qty}</td><td>${p.price.toLocaleString()}</td><td>${tt.toLocaleString()}</td></tr>`;
+        });
+        document.getElementById('b-total').innerText = 'Tổng: ' + total.toLocaleString() + 'đ';
     }
 
-    // Render Form Nhập liệu Sản phẩm
-    function renderProductForm() {
-        const container = document.getElementById('product-list');
-        container.innerHTML = '';
-        products.forEach((p, index) => {
-            container.innerHTML += `
-                <div class="product-inputs">
-                    <h4>Sản phẩm ${index + 1} <span class="btn-remove" onclick="removeProduct(${index})">[Xóa]</span></h4>
-                    <div class="form-group">
-                        <input type="text" placeholder="Tên sản phẩm" value="${p.name}" oninput="updateProduct(${index}, 'name', this.value)">
-                    </div>
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <input type="text" placeholder="ĐVT (Chai, Lọ...)" value="${p.unit}" oninput="updateProduct(${index}, 'unit', this.value)">
-                        </div>
-                        <div class="form-group">
-                            <input type="number" placeholder="Số lượng" value="${p.qty}" oninput="updateProduct(${index}, 'qty', this.value)">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Đơn giá (VNĐ)</label>
-                        <input type="number" placeholder="Đơn giá" value="${p.price}" oninput="updateProduct(${index}, 'price', this.value)">
-                    </div>
-                </div>
-            `;
-        });
+    function addProduct() {
+        products.push({ name: 'Sản phẩm mới', qty: 1, price: 0 });
         updateBill();
     }
 
-    // Hàm cập nhật mảng sản phẩm khi nhập
-    function updateProduct(index, field, value) {
-        if (field === 'qty' || field === 'price') value = Number(value) || 0;
-        products[index][field] = value;
-        updateBill(); // Tự động update view
-    }
-
-    // Hàm thêm sản phẩm mới
-    function addProduct() {
-        products.push({ name: '', unit: 'Cái', qty: 1, price: 0 });
-        renderProductForm();
-    }
-
-    // Hàm xóa sản phẩm
-    function removeProduct(index) {
-        products.splice(index, 1);
-        renderProductForm();
-    }
-
-    // Hàm cập nhật toàn bộ Hóa Đơn (Bên phải)
-    function updateBill() {
-        // Update Header & Meta
-        document.getElementById('b-store').innerText = document.getElementById('i-store').value;
-        document.getElementById('b-address').innerText = document.getElementById('i-address').value;
-        document.getElementById('b-phone').innerText = document.getElementById('i-phone').value;
-        document.getElementById('b-date').innerText = document.getElementById('i-date').value;
-        document.getElementById('b-staff').innerText = document.getElementById('i-staff').value;
-        document.getElementById('b-customer').innerText = document.getElementById('i-customer').value;
-
-        // Update Table
-        const tbody = document.getElementById('b-product-table');
-        tbody.innerHTML = '';
-        let totalQty = 0;
-        let totalAmount = 0;
-
-        products.forEach((p, i) => {
-            const thanhTien = p.qty * p.price;
-            totalQty += p.qty;
-            totalAmount += thanhTien;
-
-            tbody.innerHTML += `
-                <tr>
-                    <td class="col-stt">${i + 1}</td>
-                    <td class="col-ten">${p.name}</td>
-                    <td class="col-dvt">${p.unit}</td>
-                    <td class="col-sl">${p.qty}</td>
-                    <td class="col-dg">${formatMoney(p.price)}</td>
-                    <td class="col-tt">${formatMoney(thanhTien)}</td>
-                </tr>
-            `;
-        });
-
-        // Update Summary
-        document.getElementById('b-total-qty').innerText = totalQty;
-        document.getElementById('b-total-amount').innerText = formatMoney(totalAmount);
-        
-        let cash = Number(document.getElementById('i-cash').value) || 0;
-        let transfer = Number(document.getElementById('i-transfer').value) || 0;
-        
-        document.getElementById('b-cash').innerText = formatMoney(cash);
-        document.getElementById('b-transfer').innerText = formatMoney(transfer);
-    }
-
-    // Khởi tạo chạy lần đầu
-    renderProductForm();
-
-    // Hàm Xuất PDF A4 Ngang
     function exportPDF() {
-        const element = document.getElementById('bill-template');
-        
-        // Tùy chọn cấu hình PDF
-        const opt = {
-            margin:       0,
-            filename:     'Hoa_Don_Ban_Le.pdf',
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' } // A4 ngang
-        };
-
-        // Chuyển đổi và tải xuống
-        html2pdf().set(opt).from(element).save();
+        html2pdf().set({ jsPDF: { unit: 'mm', format: [80, 200] } }).from(document.getElementById('bill-template')).save();
     }
-</script>
 
+    updateBill();
+</script>
 </body>
 </html>
