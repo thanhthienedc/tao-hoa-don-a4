@@ -2,129 +2,128 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Phần Mềm Tạo Hóa Đơn Gas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phần Mềm Tạo Hóa Đơn</title>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Barcode+39&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root { --bg: #f4f6f9; }
+        :root { --primary: #007bff; --bg: #f4f6f9; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
-        body { background: var(--bg); display: flex; padding: 20px; gap: 20px; }
+        body { background: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 20px; }
 
-        /* CỘT NHẬP LIỆU */
-        .form-section { background: #fff; width: 400px; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); height: 95vh; overflow-y: auto; }
+        .container { display: flex; width: 100%; max-width: 1400px; gap: 20px; align-items: flex-start; }
+        
+        /* CỘT TRÁI: BẢNG NHẬP LIỆU */
+        .form-section { background: #fff; width: 400px; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); height: 90vh; overflow-y: auto; }
         .form-group { margin-bottom: 12px; }
-        .form-group label { font-size: 13px; font-weight: bold; color: #555; }
-        .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-        .btn { width: 100%; padding: 10px; font-weight: bold; cursor: pointer; border: none; border-radius: 4px; margin-top: 5px; }
+        .form-group label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #555; }
+        .form-group input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        
+        .product-inputs { border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 4px; background: #fafafa; }
+        .btn { width: 100%; padding: 10px; margin-top: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-add { background: #28a745; color: #fff; }
-        .btn-ai { background: #17a2b8; color: #fff; }
-        .btn-pdf { background: #dc3545; color: #fff; margin-top: 15px; }
+        .btn-pdf { background: #dc3545; color: #fff; margin-top: 10px; }
+        .btn-k80 { background: #007bff; color: #fff; }
 
-        /* CỘT XEM TRƯỚC */
-        .preview-section { flex: 1; background: #666; padding: 20px; display: flex; justify-content: center; overflow-y: auto; }
+        /* CỘT PHẢI: PREVIEW */
+        .preview-section { flex: 1; overflow-x: auto; background: #666; padding: 20px; border-radius: 8px; display: flex; justify-content: center; }
         .bill-template { background: #fff; width: 297mm; min-height: 210mm; padding: 20mm; color: #000; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
         
-        /* Cấu hình K80 */
-        .bill-template.k80 { width: 72mm; min-height: auto; padding: 5mm; font-size: 11px; }
-        .k80 .store-name { font-size: 14px; }
-        .k80 .bill-title { font-size: 16px; }
-        .k80 .summary { width: 100%; }
+        /* CSS CHO K80 */
+        .bill-template.k80 { width: 80mm; min-height: auto; padding: 5mm; font-size: 10px; }
+        .bill-template.k80 .store-name { font-size: 14px; }
+        .bill-template.k80 .barcode { font-size: 30px; }
+        .bill-template.k80 table { font-size: 9px; }
 
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        /* BẢNG & TEXT */
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; }
         th, td { border: 1px solid #000; padding: 5px; text-align: left; }
+        .summary { width: 300px; margin-left: auto; }
+        .summary-row { display: flex; justify-content: space-between; }
+        .footer { text-align: center; margin-top: 20px; }
     </style>
 </head>
 <body>
 
-<div class="form-section">
-    <h2>NHẬP HÓA ĐƠN</h2>
-    <div class="form-group">
-        <label>Tổng tiền muốn chia:</label>
-        <input type="number" id="i-ai-total" placeholder="Nhập tổng tiền (ví dụ: 1000000)">
-        <button class="btn btn-ai" onclick="autoGenerateProducts()">✨ Chia món tự động</button>
+<div class="container">
+    <div class="form-section">
+        <h2>NHẬP THÔNG TIN</h2>
+        <div class="form-group"><label>Tên cửa hàng</label><input type="text" id="i-store" value="CỬA HÀNG GAS MINH TỰ TB" oninput="updateBill()"></div>
+        <div class="form-group"><label>Khách hàng</label><input type="text" id="i-customer" value="Trần Thanh Thảo" oninput="updateBill()"></div>
+        <hr>
+        <h3>Danh sách sản phẩm</h3>
+        <div id="product-list"></div>
+        <button class="btn btn-add" onclick="addProduct()">+ Thêm Sản Phẩm</button>
+        <hr>
+        <button class="btn btn-k80" onclick="exportPDF('k80')">🖨️ XUẤT K80 (Máy in nhiệt)</button>
+        <button class="btn btn-pdf" onclick="exportPDF('a4')">💾 XUẤT A4 NGANG</button>
     </div>
-    <hr style="margin: 15px 0;">
-    <div class="form-group">
-        <label>Khổ in:</label>
-        <select id="i-paper-size" onchange="applyPaperSize()">
-            <option value="a4">A4 Ngang</option>
-            <option value="k80">K80 (Bill nhiệt)</option>
-        </select>
-    </div>
-    <div id="product-list"></div>
-    <button class="btn btn-add" onclick="addProduct()">+ Thêm Sản Phẩm</button>
-    <button class="btn btn-pdf" onclick="exportPDF()">💾 LƯU PDF</button>
-</div>
 
-<div class="preview-section">
-    <div class="bill-template" id="bill-template">
-        <div class="store-name" id="b-store">CỬA HÀNG GAS MINH TỰ TB</div>
-        <div class="bill-title">HÓA ĐƠN BÁN LẺ</div>
-        <table>
-            <thead><tr><th>Tên SP</th><th>SL</th><th>Đơn giá</th><th>Thành tiền</th></tr></thead>
-            <tbody id="b-product-table"></tbody>
-        </table>
-        <div class="summary">
-            <div>Tổng cộng: <span id="b-total-amount">0đ</span></div>
+    <div class="preview-section">
+        <div class="bill-template" id="bill-template">
+            <div class="store-name" id="b-store">CỬA HÀNG GAS MINH TỰ TB</div>
+            <div style="text-align: center; margin: 10px 0;">
+                <div style="font-size: 20px; font-weight: bold;">HÓA ĐƠN BÁN LẺ</div>
+                <div class="barcode">*0901263661*</div>
+            </div>
+            <div>Khách hàng: <span id="b-customer">Trần Thanh Thảo</span></div>
+            <table>
+                <thead><tr><th>STT</th><th>Tên</th><th>SL</th><th>Đơn giá</th><th>Thành tiền</th></tr></thead>
+                <tbody id="b-product-table"></tbody>
+            </table>
+            <div class="summary" id="b-summary"></div>
+            <div class="footer">CẢM ƠN QUÝ KHÁCH</div>
         </div>
     </div>
 </div>
 
 <script>
-    let products = [{ name: 'Bình Gas', unit: 'Bình', qty: 1, price: 0 }];
-
-    function autoGenerateProducts() {
-        const total = parseFloat(document.getElementById('i-ai-total').value) || 0;
-        // Logic chia tỷ lệ: 60% Bình, 20% Van, 20% Dây
-        products = [
-            { name: 'Bình Gas 12kg', unit: 'Bình', qty: 1, price: Math.round(total * 0.6 / 1000) * 1000 },
-            { name: 'Van điều áp', unit: 'Cái', qty: 1, price: Math.round(total * 0.2 / 1000) * 1000 },
-            { name: 'Dây dẫn gas', unit: 'Bộ', qty: 1, price: Math.round(total * 0.2 / 1000) * 1000 }
-        ];
-        renderProductForm();
-    }
-
-    function applyPaperSize() {
-        const size = document.getElementById('i-paper-size').value;
-        const bill = document.getElementById('bill-template');
-        size === 'k80' ? bill.classList.add('k80') : bill.classList.remove('k80');
-    }
+    let products = [{ name: 'Sản phẩm mẫu', unit: 'Cái', qty: 1, price: 100000 }];
 
     function renderProductForm() {
         const container = document.getElementById('product-list');
         container.innerHTML = '';
-        products.forEach((p, i) => {
-            container.innerHTML += `<div style="border:1px solid #ccc; padding:5px; margin-bottom:5px;">
-                <input value="${p.name}" oninput="products[${i}].name=this.value; updateBill()">
-                <div style="display:flex; gap:5px;">
-                    <input type="number" value="${p.qty}" oninput="products[${i}].qty=this.value; updateBill()">
-                    <input type="number" value="${p.price}" oninput="products[${i}].price=this.value; updateBill()">
-                </div>
-            </div>`;
+        products.forEach((p, index) => {
+            container.innerHTML += `
+                <div class="product-inputs">
+                    <input type="text" value="${p.name}" oninput="products[${index}].name=this.value; updateBill()">
+                    <div style="display:flex; gap:5px; margin-top:5px;">
+                        <input type="number" value="${p.qty}" oninput="products[${index}].qty=Number(this.value); updateBill()">
+                        <input type="number" value="${p.price}" oninput="products[${index}].price=Number(this.value); updateBill()">
+                    </div>
+                </div>`;
         });
         updateBill();
     }
 
     function updateBill() {
+        document.getElementById('b-store').innerText = document.getElementById('i-store').value;
+        document.getElementById('b-customer').innerText = document.getElementById('i-customer').value;
         const tbody = document.getElementById('b-product-table');
         tbody.innerHTML = '';
         let total = 0;
-        products.forEach(p => {
-            let thanhTien = p.qty * p.price;
-            total += thanhTien;
-            tbody.innerHTML += `<tr><td>${p.name}</td><td>${p.qty}</td><td>${p.price}</td><td>${thanhTien}</td></tr>`;
+        products.forEach((p, i) => {
+            let tt = p.qty * p.price;
+            total += tt;
+            tbody.innerHTML += `<tr><td>${i+1}</td><td>${p.name}</td><td>${p.qty}</td><td>${p.price.toLocaleString()}</td><td>${tt.toLocaleString()}</td></tr>`;
         });
-        document.getElementById('b-total-amount').innerText = total.toLocaleString() + 'đ';
+        document.getElementById('b-summary').innerHTML = `<div class="summary-row"><b>Tổng:</b> <b>${total.toLocaleString()}đ</b></div>`;
     }
 
-    function addProduct() { products.push({ name: '', unit: '', qty: 1, price: 0 }); renderProductForm(); }
+    function addProduct() { products.push({ name: '', unit: 'Cái', qty: 1, price: 0 }); renderProductForm(); }
 
-    function exportPDF() {
-        const size = document.getElementById('i-paper-size').value;
+    function exportPDF(type) {
+        const element = document.getElementById('bill-template');
+        const isK80 = (type === 'k80');
+        if (isK80) element.classList.add('k80');
+        
         const opt = {
-            filename: 'HoaDon.pdf',
-            jsPDF: { unit: 'mm', format: size === 'k80' ? [80, 200] : 'a4', orientation: size === 'k80' ? 'portrait' : 'landscape' }
+            margin: isK80 ? 2 : 10,
+            filename: isK80 ? 'HoaDon_K80.pdf' : 'HoaDon_A4.pdf',
+            jsPDF: { unit: 'mm', format: isK80 ? [210, 80] : 'a4', orientation: isK80 ? 'portrait' : 'landscape' }
         };
-        html2pdf().set(opt).from(document.getElementById('bill-template')).save();
+        
+        html2pdf().set(opt).from(element).save().then(() => element.classList.remove('k80'));
     }
 
     renderProductForm();
